@@ -1,13 +1,23 @@
 *, *::before, *::after {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
 body {
-    font-family: 'Inconsolata', monospace;
-    text-align: center;
+  font-family: 'Inconsolata', monospace;
+  text-align: center;
 }
 
-#board {
-    /* background-color: skyblue; */
-    background-image: url("./img/background.png");
+#canvas {
+  position: absolute;
+  /*background-image: url("./img/background.png");*/
+  top: 0;
+  left: 0;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.assets {
+  display: none;
 }

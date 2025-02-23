@@ -5,10 +5,16 @@
     <meta name="viewport", content="width=device-width, initial-scale=1.0">
     <title>Game</title>
     <link rel="stylesheet" href="style.css">
-    <script src="main.js"></script>
+    <!--<script src="main.js" defer></script>-->
   </head>
   <body>
-    <div>Teste</div>
-    <canvas id="board"></canvas>
+    <div class="assets">
+      <img id="background" src="img/background.png">
+    </div>
+    <canvas id="canvas"></canvas>
   </body>
+  <script src="background.js"></script>
+  <script src="player.js"></script>
+  <script src="controls.js"></script>
+  <script src="main.js"></script>
 </html>

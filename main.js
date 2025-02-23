@@ -1,204 +1,88 @@
-//board
-let board;
-let boardWidth = 1800;
-let boardHeight = 640;
-let context;
+//import Background from "background.js";
+//import Player from "player.js";
+//import { keydownHandling, keyupHandling } from "controls.js";
 
-// main character
-let playerWidth = 100;
-let playerHeight = 100;
-const ground = boardHeight - playerHeight - 40;
-let playerX = boardWidth / 8;
-let playerY = ground;
-let playerImgs = [];
+const GRAVITY = 0.1;
+const GROUND_PIXEL = 53;
 
-let player = {
-  x: playerX,
-  y: playerY,
-  w: playerWidth,
-  h: playerHeight,
-  vx: 0,
-  vy: 0,
-  moving: false,
-  facingRight: true,
-  onTheGround: false,
-  animation: 0,
+class Game {
+  constructor(canvas, context) {
+    this.canvas = canvas;
+    this.context = context;
+    this.background = new Background(this);
+    this.player = new Player(this);
+    this.baseHeight = this.background.baseHeight;
+
+    this.time = 0;
+
+    // the following will be defined on resize events
+    this.ratio;
+    this.width;
+    this.height;
+    this.gravity;
+
+    // resize the window initially
+    this.resize(window.innerWidth, window.innerHeight);
+    // listen to resize events and resize accordingly
+    window.addEventListener('resize', e => {
+      this.resize(e.currentTarget.innerWidth, e.currentTarget.innerHeight);
+    });
+
+    // input variables
+    this.inputUp = false;
+    this.inputDown = false;
+    this.inputRight = false;
+    this.inputLeft = false;
+
+    // listen to user keyboard
+    document.addEventListener("keydown", (ev) => {
+      keydownHandling(this, ev);
+    });
+    document.addEventListener("keyup", (ev) => {
+      keyupHandling(this, ev);
+    });
+  }
+
+  resize(width, height) {
+    this.canvas.width = this.width = width;
+    this.canvas.height = this.height = height;
+
+    this.ratio = this.height / this.baseHeight;
+    this.gravity = GRAVITY * this.ratio;
+
+    this.background.resize();
+    this.player.resize();
+  }
+
+  update() {
+    this.time += 1;
+    this.background.update();
+    this.player.update();
+  }
+
+  render() {
+    this.context.clearRect(0, 0, this.width, this.height);  // clear screen
+    this.background.draw();
+    this.player.draw();
+  }
+
+  baseGround(obj) {
+    return this.height - obj.height - GROUND_PIXEL * this.ratio;
+  }
 }
-
-// game variables
-let time = 0;
-let gravity = 0.1;
-let gameOver = false;
-let maxVelocity = 10;  // maximum velocity due to air resistance
-const moveVelocity = 3;
-const jumpVelocity = -8;
-
-let inputUp = false;
-let inputDown = false;
-let inputRight = false;
-let inputLeft = false;
-
-let appleWidth = 20;
-let appleHeight = 20;
-
-const animationTime = 45;
 
 // runned when loading the page
 window.onload = function() {
-  loadGame();
-  requestAnimationFrame(updateFrame); // callback as an argument each frame
-}
+  canvas = document.querySelector("#canvas");
+  context = canvas.getContext("2d");
 
-function loadGame() {
-  // canvas element with id="board"
-  board = document.querySelector("#board");
-  board.height = boardHeight;
-  board.width = boardWidth;
-  context = board.getContext("2d");
+  const game = new Game(canvas, context);
 
-  loadImages();
-
-  // listen to user keyboard
-  document.addEventListener("keydown", keydownHandling);
-  document.addEventListener("keyup", keyupHandling);
-}
-
-function loadImages() {
-  playerImgs[0] = new Image();
-  playerImgs[0].src = "./img/gato_maca0.png";
-  playerImgs[1] = new Image();
-  playerImgs[1].src = "./img/gato_maca1.png";
-  playerImgs[2] = new Image();
-  playerImgs[2].src = "./img/gato_maca2.png";
-
-  appleImage = new Image();
-  appleImage.src = "./img/apple.png";
-}
-
-function updateFrame() {
-  time += 1;
-
-  if (gameOver) {
-    context.fillText("GAME OVER", 5, 90);
-    return;
+  function loop() {
+    game.update();
+    game.render();
+    requestAnimationFrame(loop);
   }
 
-  context.clearRect(0, 0, board.width, board.height);
-
-  // handling jump 
-  if (inputUp && player.onTheGround) {
-    player.vy = jumpVelocity;
-  }
-
-  // handling movement
-  player.moving = true
-  if (inputLeft && !inputRight) {
-    player.vx = -moveVelocity;
-    player.facingRight = false;
-  }
-  else if (!inputLeft && inputRight) {
-    player.vx = moveVelocity;
-    player.facingRight = true;
-  }
-  else {
-    player.vx = 0;
-    player.moving = false;
-  }
-
-  if (player.onTheGround) {
-    if (!player.moving) {
-      player.animation = 1;
-    }
-    else {
-      player.animation = (time % animationTime < animationTime / 3) ? 0 :
-        (time % animationTime < 2 * animationTime / 3) ? 1 : 2;
-    }
-  }
-  else {
-    player.animation = 0;
-  }
-  //player.animation = !player.moving ? 0 : (time % 30 < 15) ? 1 : 2;
-
-  player.vy = Math.min(player.vy += gravity, maxVelocity);  // maxVelocity due to air resistance
-  player.y += player.vy
-  if (detectOnTheGround())
-    player.y = ground;
-
-  player.x += player.vx;
-
-  drawToCanvas();
-
-  requestAnimationFrame(updateFrame);
-}
-
-function detectOnTheGround() {
-  return (player.onTheGround = (player.y >= ground));
-}
-
-//function firePower() {
-//  context.save()
-//  let angle = 2 * Math.PI * (time % 60);
-//  context.rotate(angle);
-//  context.drawImage(appleImage, -appleWidth / 2, -appleHeight / 2);
-//}
-
-function drawToCanvas() {
-  // Flip image if facing left
-  context.save();
-  if (player.facingRight) {
-    context.scale(-1, 1);
-    context.drawImage(
-      playerImgs[player.animation],
-      -player.x - player.w,  // Adjust for flipped positioning
-      player.y,
-      player.w,
-      player.h
-    );
-  } else {
-    context.drawImage(playerImgs[player.animation], player.x, player.y, player.w, player.h);
-  }
-  context.restore();
-}
-
-function keyupHandling(ev) {
-  switch (ev.code) {
-    case "KeyW":
-      inputUp = false;
-      break;
-    case "KeyS":
-      inputDown = false;
-      break;
-    case "KeyD":
-      inputRight = false;
-      break;
-    case "KeyA":
-      inputLeft = false;
-      break;
-    default:
-      break;
-  }
-}
-
-function keydownHandling(ev) {
-  switch (ev.code) {
-    case "KeyW":
-      if (player.onTheGround) {
-        player.onTheGround = false;
-      }
-      inputUp = true;
-      break;
-    case "KeyS":
-      inputDown = true;
-      break;
-    case "KeyD":
-      inputRight = true;
-      break;
-    case "KeyA":
-      inputLeft = true;
-      break;
-    //case "Space":
-    //  firePower();
-    default:
-      break;
-  }
+  loop();
 }
