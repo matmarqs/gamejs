@@ -1,0 +1,13 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inconsolata', monospace;
+    text-align: center;
+}
+
+#board {
+    /* background-color: skyblue; */
+    background-image: url("./img/background.png");
+}
