@@ -39,6 +39,7 @@ class Game {
       keydownHandling(this, ev);
     });
     document.addEventListener("keyup", (ev) => {
+      console.log(ev.code);
       keyupHandling(this, ev);
     });
   }
